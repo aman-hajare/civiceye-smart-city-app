@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import { Home, AlertCircle, Users, BarChart3 } from "lucide-react";
 
 const Sidebar = () => {
+  const role = localStorage.getItem("role");
   return (
     <div className="h-screen w-64 bg-gray-900 text-white fixed left-0 top-0 p-5">
       <h1 className="text-2xl font-bold mb-8 text-blue-400">

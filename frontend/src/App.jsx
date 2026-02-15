@@ -1,19 +1,3 @@
-// import { BrowserRouter, Routes, Route } from "react-router-dom";
-// import AdminDashboard from "./pages/AdminDashboard";
-// import Login from "./pages/Login";
-
-// function App() {
-//   return (
-//     <BrowserRouter>
-//       <Routes>
-//         <Route path="/" element={<Login />} />
-//         <Route path="/dashboard" element={<AdminDashboard />} />
-//       </Routes>
-//     </BrowserRouter>
-//   );
-// }
-
-// export default App;
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -22,26 +6,47 @@ import UserDashboard from "./pages/UserDashboard";
 import IssueList from "./pages/IssueList";
 
 function App() {
+  const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
+
+  const ProtectedRoute = ({ children, allowedRole }) => {
+    if (!token) return <Navigate to="/" />;
+    if (allowedRole && role !== allowedRole) return <Navigate to="/" />;
+    return children;
+  };
 
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
 
-        <Route path="/issues" element={<IssueList />} />
+        <Route
+          path="/dashboard"
+          element={
+            role === "ADMIN" ? (
+              <ProtectedRoute allowedRole="ADMIN">
+                <AdminDashboard />
+              </ProtectedRoute>
+            ) : role === "WORKER" ? (
+              <ProtectedRoute allowedRole="WORKER">
+                <WorkerDashboard />
+              </ProtectedRoute>
+            ) : (
+              <ProtectedRoute allowedRole="USER">
+                <UserDashboard />
+              </ProtectedRoute>
+            )
+          }
+        />
 
-        {role === "ADMIN" && (
-          <Route path="/dashboard" element={<AdminDashboard />} />
-        )}
-
-        {role === "WORKER" && (
-          <Route path="/dashboard" element={<WorkerDashboard />} />
-        )}
-
-        {role === "USER" && (
-          <Route path="/dashboard" element={<UserDashboard />} />
-        )}
+        <Route
+          path="/issues"
+          element={
+            <ProtectedRoute>
+              <IssueList />
+            </ProtectedRoute>
+          }
+        />
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
@@ -50,6 +55,3 @@ function App() {
 }
 
 export default App;
-
-
-
