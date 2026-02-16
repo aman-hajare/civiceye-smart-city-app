@@ -16,6 +16,7 @@ backend/env/
 backend/ENV/
 
 backend/__pycache__/
+backend/**/__pycache__/
 backend/**/*.py[cod]
 backend/*.py[cod]
 
