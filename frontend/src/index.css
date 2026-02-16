@@ -1,3 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  .login-input:-webkit-autofill,
+  .login-input:-webkit-autofill:hover,
+  .login-input:-webkit-autofill:focus,
+  .login-input:-webkit-autofill:active {
+    -webkit-text-fill-color: #111827;
+    transition: background-color 5000s ease-in-out 0s;
+    box-shadow: 0 0 0 1000px rgba(241, 245, 249, 0.55) inset;
+  }
+}

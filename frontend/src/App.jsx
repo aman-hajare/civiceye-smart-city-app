@@ -1,56 +1,133 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Login from "./pages/Login";
-import AdminDashboard from "./pages/AdminDashboard";
-import WorkerDashboard from "./pages/WorkerDashboard";
-import UserDashboard from "./pages/UserDashboard";
-import IssueList from "./pages/IssueList";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useState } from 'react';
+import { getAccessToken, getRole } from './services/auth';
+import { NotificationProvider } from './context/NotificationContext';
 
-function App() {
-  const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import IssueList from './pages/IssueList';
+import AnalyticsPage from './pages/AnalyticsPage';
+import MapView from './pages/MapView';
+import ReportIssue from './pages/ReportIssue';
+import UsersPage from './pages/UsersPage';
 
-  const ProtectedRoute = ({ children, allowedRole }) => {
-    if (!token) return <Navigate to="/" />;
-    if (allowedRole && role !== allowedRole) return <Navigate to="/" />;
-    return children;
-  };
+import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
+
+const ProtectedRoute = ({ children, requiredRole = null, disallowedRoles = [] }) => {
+  const token = getAccessToken();
+  const role = getRole();
+
+  if (!token) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (requiredRole && role !== requiredRole) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  if (disallowedRoles.includes(role)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+};
+
+const DashboardLayout = ({ children }) => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Login />} />
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar mobileOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+      <div className="flex-1 flex flex-col overflow-hidden md:ml-64">
+        <Navbar onMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)} />
+        <main className="flex-1 overflow-y-auto">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+};
 
-        <Route
-          path="/dashboard"
-          element={
-            role === "ADMIN" ? (
-              <ProtectedRoute allowedRole="ADMIN">
-                <AdminDashboard />
-              </ProtectedRoute>
-            ) : role === "WORKER" ? (
-              <ProtectedRoute allowedRole="WORKER">
-                <WorkerDashboard />
-              </ProtectedRoute>
-            ) : (
-              <ProtectedRoute allowedRole="USER">
-                <UserDashboard />
-              </ProtectedRoute>
-            )
-          }
-        />
+function App() {
+  const isAuthenticated = Boolean(getAccessToken());
 
-        <Route
-          path="/issues"
-          element={
-            <ProtectedRoute>
-              <IssueList />
-            </ProtectedRoute>
-          }
-        />
+  return (
+    <NotificationProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
 
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </BrowserRouter>
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Dashboard />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/issues"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <IssueList />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/analytics"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <AnalyticsPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/map"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <MapView />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/report"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <ReportIssue />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <DashboardLayout>
+                  <UsersPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="*" element={<Navigate to={isAuthenticated ? '/dashboard' : '/'} replace />} />
+        </Routes>
+      </BrowserRouter>
+    </NotificationProvider>
   );
 }
 

@@ -1,17 +1,27 @@
 from rest_framework.routers import DefaultRouter
-from django.urls import path
-from .views import IssueViewSet, DashboardStatsView,NearbyIssuesView,UserViewSet,NotificationViewSet
-
+from django.urls import path, include
+from .views import (
+    IssueViewSet,
+    DashboardStatsView,
+    NearbyIssuesView,
+    UserViewSet,
+    NotificationViewSet
+)
 
 router = DefaultRouter()
-router.register(r'issues', IssueViewSet, basename='issue')
-router.register(r'users', UserViewSet, basename='user')
+
+# Main Resources
+router.register(r'issues', IssueViewSet, basename='issues')
 router.register(r'notifications', NotificationViewSet, basename='notifications')
+router.register(r'users', UserViewSet, basename='users')
 
 
-urlpatterns = router.urls
+urlpatterns = [
+    path('', include(router.urls)),
 
-urlpatterns += [
-    path('dashboard/', DashboardStatsView.as_view(), name='dashboard-stats'),
-    path('nearby/', NearbyIssuesView.as_view(), name='nearby-issues'),
+    # Dashboard
+    path('dashboard/stats/', DashboardStatsView.as_view(), name='dashboard-stats'),
+
+    # Map / Geo
+    path('issues/nearby/', NearbyIssuesView.as_view(), name='nearby-issues'),
 ]
