@@ -13,6 +13,7 @@ const IssueList = () => {
   const [assigningIssueId, setAssigningIssueId] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const role = getRole();
+  const showReporterColumn = role === 'ADMIN' || role === 'WORKER';
 
   const getIssuesList = (payload) => {
     if (Array.isArray(payload)) return payload;
@@ -140,6 +141,7 @@ const IssueList = () => {
               <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Title</th>
+                  {showReporterColumn && <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Reported By</th>}
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Category</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Image</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
@@ -152,6 +154,22 @@ const IssueList = () => {
                 {issues.map((issue) => (
                   <tr key={issue.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">{issue.title}</td>
+                    {showReporterColumn && (
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {issue.reported_by ? (
+                          <div className="flex flex-col">
+                            <span className="font-medium text-gray-900">
+                              {issue.reported_by.full_name || issue.reported_by.username || 'Unknown'}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              ID: {issue.reported_by.id ?? 'N/A'}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">N/A</span>
+                        )}
+                      </td>
+                    )}
                     <td className="px-6 py-4 text-sm text-gray-600"><span className="px-2 py-1 bg-gray-100 rounded text-xs font-medium">{issue.category}</span></td>
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {issue.image_url || issue.image ? (

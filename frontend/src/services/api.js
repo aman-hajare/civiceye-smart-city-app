@@ -33,6 +33,8 @@ api.interceptors.response.use(
           localStorage.removeItem('access');
           localStorage.removeItem('refresh');
           localStorage.removeItem('role');
+          localStorage.removeItem('username');
+          localStorage.removeItem('full_name');
           window.location.href = '/';
           return Promise.reject(error);
         }
@@ -46,6 +48,8 @@ api.interceptors.response.use(
         localStorage.removeItem('access');
         localStorage.removeItem('refresh');
         localStorage.removeItem('role');
+        localStorage.removeItem('username');
+        localStorage.removeItem('full_name');
         window.location.href = '/';
         return Promise.reject(refreshError);
       }

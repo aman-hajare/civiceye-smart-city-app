@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotification } from '../context/NotificationContext';
-import { logout, getRole } from '../services/auth';
+import { logout, getRole, getUserName, getFullName } from '../services/auth';
 
 const Navbar = ({ onMenuToggle }) => {
   const { unreadCount, isConnected } = useNotification();
@@ -9,6 +9,15 @@ const Navbar = ({ onMenuToggle }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const role = getRole();
+  const userName = getUserName();
+  const fullName = getFullName();
+  const roleLabelByRole = {
+    ADMIN: 'Administrator',
+    WORKER: 'Worker',
+    USER: 'User',
+  };
+  const displayRole = role || 'USER';
+  const displayName = fullName || userName || roleLabelByRole[displayRole] || 'User';
   const headerByRole = {
     ADMIN: 'Admin Dashboard',
     WORKER: 'Worker Dashboard',
@@ -57,15 +66,19 @@ const Navbar = ({ onMenuToggle }) => {
             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-sm font-medium text-blue-700"
           >
             <span>👤</span>
-            <span className="uppercase tracking-wide">{role}</span>
+            <span className="uppercase tracking-wide">{displayRole}</span>
             <span className={`text-xs transition-transform ${showMenu ? 'rotate-180' : ''}`}>▼</span>
           </button>
 
           {showMenu && (
-            <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+            <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+              <div className="px-4 py-3 border-b border-gray-100">
+                <p className="text-sm font-semibold text-gray-800 truncate">{displayName}</p>
+                <p className="text-xs uppercase tracking-wide text-gray-500">{displayRole}</p>
+              </div>
               <button
                 onClick={handleLogout}
-                className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 border-t border-gray-100 rounded-b-lg transition"
+                className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-b-lg transition"
               >
                 Logout
               </button>

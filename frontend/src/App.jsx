@@ -116,7 +116,7 @@ function App() {
           <Route
             path="/users"
             element={
-              <ProtectedRoute requiredRole="ADMIN">
+              <ProtectedRoute>
                 <DashboardLayout>
                   <UsersPage />
                 </DashboardLayout>
@@ -132,3 +132,4 @@ function App() {
 }
 
 export default App;
+

@@ -14,7 +14,7 @@ const Sidebar = ({ mobileOpen = false, onClose }) => {
     { to: '/issues', label: 'Issues', icon: '📋', roles: ['ADMIN', 'WORKER', 'USER'] },
     { to: '/analytics', label: 'Analytics', icon: '📈', roles: ['ADMIN', 'WORKER'] },
     { to: '/map', label: 'Map View', icon: '🗺️', roles: ['ADMIN', 'WORKER', 'USER'] },
-    { to: '/users', label: 'Users', icon: '👥', roles: ['ADMIN'] },
+    { to: '/users', label: 'Users', icon: '👥', roles: ['ADMIN', 'WORKER', 'USER'] },
     { to: '/report', label: 'Report Issue', icon: '🆕', roles: ['USER'] },
   ].filter((item) => item.roles.includes(role));
 
@@ -59,3 +59,4 @@ const Sidebar = ({ mobileOpen = false, onClose }) => {
 };
 
 export default Sidebar;
+

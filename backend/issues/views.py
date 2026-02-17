@@ -10,7 +10,7 @@ from .websocket import send_realtime_notification
 import math
 
 from .models import Issue, User, Notification
-from .serializers import IssueSerializer
+from .serializers import IssueSerializer, RegisterUserSerializer
 
 
 # =========================================================
@@ -18,9 +18,37 @@ from .serializers import IssueSerializer
 # =========================================================
 
 class UserSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'role']
+        fields = ['id', 'username', 'role', 'full_name']
+
+    def get_full_name(self, obj):
+        full_name = f"{obj.first_name} {obj.last_name}".strip()
+        return full_name or obj.username
+
+
+class UserRegistrationView(APIView):
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        serializer = RegisterUserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        full_name = f"{user.first_name} {user.last_name}".strip() or user.username
+
+        return Response(
+            {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "full_name": full_name,
+                "role": user.role,
+            },
+            status=status.HTTP_201_CREATED
+        )
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):

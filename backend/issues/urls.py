@@ -5,7 +5,8 @@ from .views import (
     DashboardStatsView,
     NearbyIssuesView,
     UserViewSet,
-    NotificationViewSet
+    NotificationViewSet,
+    UserRegistrationView
 )
 
 router = DefaultRouter()
@@ -18,6 +19,7 @@ router.register(r'users', UserViewSet, basename='users')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('register/', UserRegistrationView.as_view(), name='register-user'),
 
     # Dashboard
     path('dashboard/stats/', DashboardStatsView.as_view(), name='dashboard-stats'),

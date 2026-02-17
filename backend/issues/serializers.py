@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.contrib.auth.password_validation import validate_password
 from .models import User, Issue
 
 
@@ -7,10 +8,79 @@ from .models import User, Issue
 # ============================================
 
 class UserSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'role']
+        fields = ['id', 'username', 'full_name', 'email', 'role']
         read_only_fields = ['role']
+
+    def get_full_name(self, obj):
+        full_name = f"{obj.first_name} {obj.last_name}".strip()
+        return full_name or obj.username
+
+
+class RegisterUserSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(write_only=True, required=True)
+    last_name = serializers.CharField(write_only=True, required=True)
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'email', 'password']
+
+    def validate_first_name(self, value):
+        first_name = " ".join(str(value).split())
+        if not first_name:
+            raise serializers.ValidationError("First name is required.")
+        if " " in first_name:
+            raise serializers.ValidationError("First name must be a single word.")
+
+        username = first_name.lower()
+        if User.objects.filter(username__iexact=username).exists():
+            raise serializers.ValidationError("This first name is already taken as username.")
+
+        return first_name
+
+    def validate_last_name(self, value):
+        last_name = " ".join(str(value).split())
+        if not last_name:
+            raise serializers.ValidationError("Last name is required.")
+        return last_name
+
+    def validate_email(self, value):
+        email = str(value).strip().lower()
+        if not email:
+            raise serializers.ValidationError("Email is required.")
+
+        if User.objects.filter(email__iexact=email).exists() or User.objects.filter(username__iexact=email).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+
+        return email
+
+    def validate_password(self, value):
+        validate_password(value)
+        return value
+
+    def create(self, validated_data):
+        first_name = validated_data.pop('first_name')
+        last_name = validated_data.pop('last_name')
+        email = validated_data.pop('email')
+        password = validated_data.pop('password')
+
+        username = first_name.lower()
+
+        user = User(
+            username=username,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            role='USER',
+        )
+        user.set_password(password)
+        user.save()
+        return user
 
 
 # ============================================
