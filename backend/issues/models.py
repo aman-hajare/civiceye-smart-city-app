@@ -3,9 +3,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 
 
-# ======================================================
 # USER MODEL
-# ======================================================
 
 class User(AbstractUser):
 
@@ -26,9 +24,7 @@ class User(AbstractUser):
         return f"{self.username} ({self.role})"
 
 
-# ======================================================
 # ISSUE MODEL
-# ======================================================
 
 class Issue(models.Model):
 
@@ -44,6 +40,7 @@ class Issue(models.Model):
     STATUS_CHOICES = (
         ('PENDING', 'Pending'),
         ('IN_PROGRESS', 'In Progress'),
+        ('COMPLETED', 'Completed'),
         ('RESOLVED', 'Resolved'),
     )
 
@@ -104,9 +101,7 @@ class Issue(models.Model):
         return f"{self.title} - {self.status}"
 
 
-# ======================================================
 # NOTIFICATION MODEL
-# ======================================================
 
 class Notification(models.Model):
 

@@ -13,9 +13,7 @@ from .models import Issue, User, Notification
 from .serializers import IssueSerializer, RegisterUserSerializer
 
 
-# =========================================================
 # USER VIEWSET
-# =========================================================
 
 class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
@@ -62,9 +60,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
         return User.objects.all()
 
 
-# =========================================================
 # ISSUE VIEWSET (CLEAN ROLE-BASED LOGIC)
-# =========================================================
 
 class IssueViewSet(viewsets.ModelViewSet):
     serializer_class = IssueSerializer
@@ -74,9 +70,15 @@ class IssueViewSet(viewsets.ModelViewSet):
     search_fields = ['title', 'description']
     ordering_fields = ['created_at', 'priority_score']
 
-    # -----------------------------
+    def _notify_users(self, users, message):
+        for target_user in users:
+            notification = Notification.objects.create(
+                user=target_user,
+                message=message
+            )
+            send_realtime_notification(target_user.id, notification)
+
     # ROLE BASED QUERYSET
-    # -----------------------------
     def get_queryset(self):
         user = self.request.user
 
@@ -88,9 +90,7 @@ class IssueViewSet(viewsets.ModelViewSet):
 
         return Issue.objects.filter(reported_by=user).order_by('-created_at')
 
-    # -----------------------------
     # CREATE ISSUE (USER ONLY)
-    # -----------------------------
     def perform_create(self, serializer):
         if self.request.user.role != "USER":
             raise PermissionDenied("Only users can report issues.")
@@ -107,16 +107,12 @@ class IssueViewSet(viewsets.ModelViewSet):
 
         # Notify all admins when a new issue is reported.
         admins = User.objects.filter(role="ADMIN")
-        for admin in admins:
-            notification = Notification.objects.create(
-                user=admin,
-                message=f"New issue reported by {self.request.user.username}: {issue.title}"
-            )
-            send_realtime_notification(admin.id, notification)
+        self._notify_users(
+            admins,
+            f"New issue reported by {self.request.user.username}: {issue.title}"
+        )
 
-    # -----------------------------
     # UPDATE ISSUE
-    # -----------------------------
     def update(self, request, *args, **kwargs):
         issue = self.get_object()
         user = request.user
@@ -132,23 +128,20 @@ class IssueViewSet(viewsets.ModelViewSet):
             if "assigned_to" in request.data or "assigned_to_id" in request.data:
                 new_worker = issue.assigned_to
                 if new_worker and new_worker != previous_assigned:
-                    notification = Notification.objects.create(
-                        user=new_worker,
-                        message=f"You have been assigned issue: {issue.title}"
+                    self._notify_users(
+                        [new_worker],
+                        f"You have been assigned issue: {issue.title}"
                     )
-
-                    send_realtime_notification(new_worker.id, notification)
 
             # Admin confirms resolution -> notify reporter
             if issue.status == "RESOLVED" and previous_status != "RESOLVED":
-                notification = Notification.objects.create(
-                    user=issue.reported_by,
-                    message=f"Your issue '{issue.title}' has been resolved by admin."
+                self._notify_users(
+                    [issue.reported_by],
+                    f"Your issue '{issue.title}' has been resolved by admin."
                 )
-                send_realtime_notification(issue.reported_by.id, notification)
 
             issue.priority_score = self.calculate_priority(issue.category, issue.status)
-            issue.save()
+            issue.save(update_fields=["priority_score"])
 
             return response
 
@@ -158,24 +151,26 @@ class IssueViewSet(viewsets.ModelViewSet):
                 raise PermissionDenied("You are not assigned to this issue.")
 
             new_status = request.data.get("status")
+            previous_status = issue.status
 
-            if new_status not in ["IN_PROGRESS"]:
+            if new_status not in ["IN_PROGRESS", "COMPLETED"]:
                 raise PermissionDenied("Invalid status update.")
+
+            if new_status == previous_status:
+                return Response(IssueSerializer(issue, context={"request": request}).data)
 
             issue.status = new_status
             issue.priority_score = self.calculate_priority(issue.category, new_status)
-            issue.save()
+            issue.save(update_fields=["status", "priority_score"])
 
-            # Notify admins that worker updated progress
-            admins = User.objects.filter(role="ADMIN")
-            for admin in admins:
-                notification = Notification.objects.create(
-                    user=admin,
-                    message=f"Worker {user.username} updated issue '{issue.title}' to IN_PROGRESS"
+            if new_status == "COMPLETED":
+                admins = User.objects.filter(role="ADMIN")
+                self._notify_users(
+                    admins,
+                    f"Worker {user.username} marked issue '{issue.title}' as COMPLETED"
                 )
-                send_realtime_notification(admin.id, notification)
 
-            return Response(IssueSerializer(issue).data)
+            return Response(IssueSerializer(issue, context={"request": request}).data)
 
         # USER cannot update
         raise PermissionDenied("You cannot update this issue.")
@@ -194,24 +189,22 @@ class IssueViewSet(viewsets.ModelViewSet):
         if issue.status == "RESOLVED":
             return Response({"detail": "Issue is already resolved."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if issue.status == "PENDING":
-            issue.status = "IN_PROGRESS"
-            issue.priority_score = self.calculate_priority(issue.category, "IN_PROGRESS")
-            issue.save()
+        if issue.status == "COMPLETED":
+            return Response({"detail": "Issue is already marked COMPLETED."}, status=status.HTTP_200_OK)
+
+        issue.status = "COMPLETED"
+        issue.priority_score = self.calculate_priority(issue.category, "COMPLETED")
+        issue.save(update_fields=["status", "priority_score"])
 
         admins = User.objects.filter(role="ADMIN")
-        for admin in admins:
-            notification = Notification.objects.create(
-                user=admin,
-                message=f"Worker {user.username} requested resolution for issue: {issue.title}"
-            )
-            send_realtime_notification(admin.id, notification)
+        self._notify_users(
+            admins,
+            f"Worker {user.username} marked issue '{issue.title}' as COMPLETED"
+        )
 
-        return Response({"detail": "Resolution request sent to admin."}, status=status.HTTP_200_OK)
+        return Response({"detail": "Issue marked as COMPLETED and admins notified."}, status=status.HTTP_200_OK)
 
-    # -----------------------------
     # PRIORITY LOGIC
-    # -----------------------------
     def calculate_priority(self, category, status):
         category_priority = {
             'POTHOLE': 8,
@@ -228,12 +221,12 @@ class IssueViewSet(viewsets.ModelViewSet):
             return base + 2
         elif status == "IN_PROGRESS":
             return base + 1
+        elif status == "COMPLETED":
+            return 1
         return 0
 
 
-# =========================================================
 # DASHBOARD STATS (ADMIN ONLY)
-# =========================================================
 
 class DashboardStatsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -246,15 +239,14 @@ class DashboardStatsView(APIView):
             "total": Issue.objects.count(),
             "pending": Issue.objects.filter(status='PENDING').count(),
             "in_progress": Issue.objects.filter(status='IN_PROGRESS').count(),
+            "completed": Issue.objects.filter(status='COMPLETED').count(),
             "resolved": Issue.objects.filter(status='RESOLVED').count(),
             "issues_by_category": Issue.objects.values('category').annotate(count=Count('category')),
             "issues_by_status": Issue.objects.values('status').annotate(count=Count('status')),
         })
 
 
-# =========================================================
 # NEARBY ISSUES
-# =========================================================
 
 class NearbyIssuesView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -296,23 +288,16 @@ class NearbyIssuesView(APIView):
         return R * c
 
 
-# =========================================================
 # NOTIFICATIONS
-# =========================================================
 
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = '__all__'
 
-from rest_framework.decorators import action
-from rest_framework.response import Response
-
 class NotificationViewSet(viewsets.ModelViewSet):
     serializer_class = NotificationSerializer
     permission_classes = [permissions.IsAuthenticated]
-
-
 
     @action(detail=False, methods=["get"])
     def unread_count(self, request):

@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import StatusPill from "../components/StatusPill";
 import { getIssues } from "../services/issueService";
+import { useNotification } from "../context/NotificationContext";
 
 const UserDashboard = () => {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { notificationVersion } = useNotification();
 
   useEffect(() => {
     const load = async () => {
@@ -21,7 +23,7 @@ const UserDashboard = () => {
     };
 
     load();
-  }, []);
+  }, [notificationVersion]);
 
   return (
     <DashboardLayout title="User Dashboard">

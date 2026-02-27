@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import StatusPill from "../components/StatusPill";
 import { getIssues, updateIssueStatus } from "../services/issueService";
+import { useNotification } from "../context/NotificationContext";
 
 const WorkerDashboard = () => {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { notificationVersion } = useNotification();
 
   useEffect(() => {
     const load = async () => {
@@ -21,14 +23,14 @@ const WorkerDashboard = () => {
     };
 
     load();
-  }, []);
+  }, [notificationVersion]);
 
   const inProgressCount = useMemo(() => issues.filter((item) => item.status === "IN_PROGRESS").length, [issues]);
 
   const completeIssue = async (id) => {
     try {
-      await updateIssueStatus(id, "RESOLVED");
-      setIssues((prev) => prev.map((item) => (item.id === id ? { ...item, status: "RESOLVED" } : item)));
+      await updateIssueStatus(id, "COMPLETED");
+      setIssues((prev) => prev.map((item) => (item.id === id ? { ...item, status: "COMPLETED" } : item)));
     } catch (error) {
       console.error("Issue completion failed:", error);
     }
@@ -63,7 +65,7 @@ const WorkerDashboard = () => {
                     <StatusPill status={issue.status} />
                     <button
                       type="button"
-                      disabled={issue.status === "RESOLVED"}
+                      disabled={issue.status === "COMPLETED" || issue.status === "RESOLVED"}
                       onClick={() => completeIssue(issue.id)}
                       className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300"
                     >

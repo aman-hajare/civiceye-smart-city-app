@@ -3,9 +3,11 @@ import axios from "axios";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
+import { useNotification } from "../context/NotificationContext";
 
 const IssueMap = () => {
   const [issues, setIssues] = useState([]);
+  const { notificationVersion } = useNotification();
 
   useEffect(() => {
     const fetchIssues = async () => {
@@ -28,12 +30,14 @@ const IssueMap = () => {
     };
 
     fetchIssues();
-  }, []);
+  }, [notificationVersion]);
 
   const getIcon = (status) => {
     const color =
       status === "RESOLVED"
         ? "green"
+        : status === "COMPLETED"
+        ? "blue"
         : status === "IN_PROGRESS"
         ? "orange"
         : "red";

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getRole } from '../services/auth';
 import { issueService } from '../services/issueService';
 import StatCard from '../components/StatCard';
+import { useNotification } from '../context/NotificationContext';
 
 const Dashboard = () => {
   const role = getRole();
@@ -15,6 +16,7 @@ const Dashboard = () => {
   const [myIssues, setMyIssues] = useState([]);
   const [updatingIssueId, setUpdatingIssueId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { notificationVersion } = useNotification();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,7 +42,7 @@ const Dashboard = () => {
     fetchData();
     const intervalId = setInterval(fetchData, 30000);
     return () => clearInterval(intervalId);
-  }, [role]);
+  }, [role, notificationVersion]);
 
   const updateWorkerIssueStatus = async (issueId, nextStatus) => {
     try {
@@ -51,17 +53,6 @@ const Dashboard = () => {
       );
     } catch (error) {
       console.error('Failed to update worker issue status:', error);
-    } finally {
-      setUpdatingIssueId(null);
-    }
-  };
-
-  const requestResolveFromAdmin = async (issueId) => {
-    try {
-      setUpdatingIssueId(issueId);
-      await issueService.requestResolve(issueId);
-    } catch (error) {
-      console.error('Failed to request resolve from admin:', error);
     } finally {
       setUpdatingIssueId(null);
     }
@@ -121,6 +112,7 @@ const Dashboard = () => {
   if (role === 'WORKER') {
     const pendingCount = assignedIssues.filter((i) => i.status === 'PENDING').length;
     const inProgressCount = assignedIssues.filter((i) => i.status === 'IN_PROGRESS').length;
+    const completedCount = assignedIssues.filter((i) => i.status === 'COMPLETED').length;
     const resolvedCount = assignedIssues.filter((i) => i.status === 'RESOLVED').length;
 
     return (
@@ -137,9 +129,10 @@ const Dashboard = () => {
             <StatCard title="Pending" value={pendingCount} color="bg-yellow-500" icon="⏳" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <StatCard title="Resolved" value={resolvedCount} color="bg-emerald-500" icon="✓" />
-            <StatCard title="Open Work" value={pendingCount + inProgressCount} color="bg-amber-500" icon="🛠️" />
+            <StatCard title="Completed" value={completedCount} color="bg-blue-500" icon="✅" />
+            <StatCard title="Open Work" value={pendingCount + inProgressCount + completedCount} color="bg-amber-500" icon="🛠️" />
             <StatCard
               title="Completion Rate"
               value={`${assignedIssues.length ? Math.round((resolvedCount / assignedIssues.length) * 100) : 0}%`}
@@ -167,6 +160,7 @@ const Dashboard = () => {
                           <span className={`inline-block px-2 py-1 rounded text-xs ${
                             issue.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
                             issue.status === 'IN_PROGRESS' ? 'bg-orange-100 text-orange-800' :
+                            issue.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
                             'bg-green-100 text-green-800'
                           }`}>
                             {issue.status}
@@ -185,11 +179,19 @@ const Dashboard = () => {
                         )}
                         {issue.status === 'IN_PROGRESS' && (
                           <button
-                            onClick={() => requestResolveFromAdmin(issue.id)}
+                            onClick={() => updateWorkerIssueStatus(issue.id, 'COMPLETED')}
                             disabled={updatingIssueId === issue.id}
-                            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition disabled:opacity-50"
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
                           >
-                            Request Resolve
+                            Mark Complete
+                          </button>
+                        )}
+                        {issue.status === 'COMPLETED' && (
+                          <button
+                            disabled
+                            className="px-4 py-2 bg-slate-300 text-slate-700 rounded-lg cursor-not-allowed"
+                          >
+                            Waiting Admin Resolve
                           </button>
                         )}
                       </div>
@@ -239,6 +241,7 @@ const Dashboard = () => {
                         <span className={`inline-block px-2 py-1 rounded text-xs ${
                           issue.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
                           issue.status === 'IN_PROGRESS' ? 'bg-orange-100 text-orange-800' :
+                          issue.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
                           'bg-green-100 text-green-800'
                         }`}>
                           {issue.status}

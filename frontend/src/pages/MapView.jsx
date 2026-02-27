@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { issueService } from '../services/issueService';
+import { useNotification } from '../context/NotificationContext';
 
 const MapView = () => {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedIssue, setSelectedIssue] = useState(null);
+  const { notificationVersion } = useNotification();
 
   useEffect(() => {
     const loadData = async () => {
@@ -20,13 +22,14 @@ const MapView = () => {
     };
 
     loadData();
-  }, []);
+  }, [notificationVersion]);
 
   const issuesWithLocation = issues.filter(i => i.latitude && i.longitude);
 
   const statusColors = {
     PENDING: { bg: 'bg-red-100', text: 'text-red-800', marker: '🔴' },
     IN_PROGRESS: { bg: 'bg-yellow-100', text: 'text-yellow-800', marker: '🟡' },
+    COMPLETED: { bg: 'bg-blue-100', text: 'text-blue-800', marker: '🔵' },
     RESOLVED: { bg: 'bg-green-100', text: 'text-green-800', marker: '🟢' },
   };
 
@@ -62,6 +65,10 @@ const MapView = () => {
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">🟡</span>
                   <span className="text-sm text-gray-700">In Progress</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🔵</span>
+                  <span className="text-sm text-gray-700">Completed (awaiting admin)</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">🟢</span>

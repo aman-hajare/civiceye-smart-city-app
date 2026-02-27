@@ -3,6 +3,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import StatCard from '../components/StatCard';
 import api from '../services/api';
 import { AlertCircle, CheckCircle, Clock, TrendingUp, RefreshCw } from 'lucide-react';
+import { useNotification } from '../context/NotificationContext';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -14,6 +15,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const { notificationVersion } = useNotification();
 
   const fetchStats = useCallback(async () => {
     try {
@@ -60,7 +62,7 @@ const AdminDashboard = () => {
     // Refresh every 15 seconds
     const interval = setInterval(fetchStats, 15000);
     return () => clearInterval(interval);
-  }, [fetchStats]);
+  }, [fetchStats, notificationVersion]);
 
   return (
     <DashboardLayout title="Admin Dashboard">

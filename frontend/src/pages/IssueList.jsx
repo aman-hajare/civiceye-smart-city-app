@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import api from '../services/api';
 import { Trash2, Edit2, AlertCircle, RefreshCw } from 'lucide-react';
 import { getRole } from '../services/auth';
+import { useNotification } from '../context/NotificationContext';
 
 const IssueList = () => {
   const [issues, setIssues] = useState([]);
@@ -14,6 +15,7 @@ const IssueList = () => {
   const [lastUpdated, setLastUpdated] = useState(null);
   const role = getRole();
   const showReporterColumn = role === 'ADMIN' || role === 'WORKER';
+  const { notificationVersion } = useNotification();
 
   const getIssuesList = (payload) => {
     if (Array.isArray(payload)) return payload;
@@ -45,7 +47,7 @@ const IssueList = () => {
     fetchIssues();
     const interval = setInterval(fetchIssues, 30000);
     return () => clearInterval(interval);
-  }, [fetchIssues]);
+  }, [fetchIssues, notificationVersion]);
 
   useEffect(() => {
     const fetchWorkers = async () => {
@@ -190,6 +192,7 @@ const IssueList = () => {
                           <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500">
                             <option value="PENDING">PENDING</option>
                             <option value="IN_PROGRESS">IN_PROGRESS</option>
+                            <option value="COMPLETED">COMPLETED</option>
                             <option value="RESOLVED">RESOLVED</option>
                           </select>
                           <button onClick={() => handleStatusChange(issue.id, editStatus)} className="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 font-medium">Save</button>

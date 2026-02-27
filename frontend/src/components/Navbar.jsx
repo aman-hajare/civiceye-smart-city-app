@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotification } from '../context/NotificationContext';
 import { logout, getRole, getUserName, getFullName } from '../services/auth';
 
 const Navbar = ({ onMenuToggle }) => {
-  const { unreadCount, isConnected } = useNotification();
+  const { notifications, unreadCount, isConnected, markAsRead, markAllAsRead } = useNotification();
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const notificationsRef = useRef(null);
   const role = getRole();
   const userName = getUserName();
   const fullName = getFullName();
@@ -30,6 +31,17 @@ const Navbar = ({ onMenuToggle }) => {
     navigate('/', { replace: true });
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <div className="h-16 bg-white shadow flex items-center justify-between px-6 w-full">
       <div className="flex items-center gap-4">
@@ -48,17 +60,54 @@ const Navbar = ({ onMenuToggle }) => {
           <span className="text-gray-600">{isConnected ? 'Live' : 'Offline'}</span>
         </div>
 
-        <button
-          onClick={() => setShowNotifications(!showNotifications)}
-          className="relative p-2 hover:bg-gray-100 rounded-lg"
-        >
-          <span className="text-xl">🔔</span>
-          {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
+        <div ref={notificationsRef} className="relative">
+          <button
+            onClick={() => setShowNotifications((prev) => !prev)}
+            className="relative p-2 hover:bg-gray-100 rounded-lg"
+          >
+            <span className="text-xl">🔔</span>
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+
+          {showNotifications && (
+            <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                <p className="text-sm font-semibold text-gray-800">Notifications</p>
+                <button
+                  type="button"
+                  onClick={markAllAsRead}
+                  disabled={unreadCount === 0}
+                  className="text-xs text-blue-600 disabled:text-gray-400"
+                >
+                  Mark all read
+                </button>
+              </div>
+
+              {notifications.length === 0 ? (
+                <p className="px-4 py-6 text-sm text-gray-500 text-center">No notifications</p>
+              ) : (
+                <ul className="max-h-80 overflow-y-auto">
+                  {notifications.map((notification) => (
+                    <li
+                      key={notification.id}
+                      onClick={() => markAsRead(notification.id)}
+                      className={`px-4 py-3 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${notification.is_read ? 'bg-white' : 'bg-red-50'}`}
+                    >
+                      <p className="text-sm text-gray-800">{notification.message}</p>
+                      <p className="mt-1 text-xs text-gray-500">
+                        {notification.created_at ? new Date(notification.created_at).toLocaleString() : ''}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
-        </button>
+        </div>
 
         <div className="relative">
           <button

@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
 import { issueService } from '../services/issueService';
+import { useNotification } from '../context/NotificationContext';
 
 const AnalyticsPage = () => {
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
     in_progress: 0,
+    completed: 0,
     resolved: 0,
   });
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { notificationVersion } = useNotification();
 
   useEffect(() => {
     const loadData = async () => {
@@ -29,7 +32,7 @@ const AnalyticsPage = () => {
     };
 
     loadData();
-  }, []);
+  }, [notificationVersion]);
 
   const categoryCount = issues.reduce((acc, issue) => {
     acc[issue.category] = (acc[issue.category] || 0) + 1;
@@ -39,6 +42,7 @@ const AnalyticsPage = () => {
   const statusCount = {
     PENDING: stats.pending || 0,
     IN_PROGRESS: stats.in_progress || 0,
+    COMPLETED: stats.completed || 0,
     RESOLVED: stats.resolved || 0,
   };
 
@@ -91,6 +95,7 @@ const AnalyticsPage = () => {
                 const colors = {
                   PENDING: 'bg-yellow-500',
                   IN_PROGRESS: 'bg-orange-500',
+                  COMPLETED: 'bg-blue-500',
                   RESOLVED: 'bg-green-500',
                 };
                 return (
@@ -144,6 +149,7 @@ const AnalyticsPage = () => {
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                   issue.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
                   issue.status === 'IN_PROGRESS' ? 'bg-orange-100 text-orange-800' :
+                  issue.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
                   'bg-green-100 text-green-800'
                 }`}>
                   {issue.status}

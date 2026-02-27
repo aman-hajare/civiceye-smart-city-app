@@ -2,24 +2,24 @@ from pathlib import Path
 from datetime import timedelta
 import dj_database_url
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# ===============================
 # SECURITY
-# ===============================
 
 SECRET_KEY = os.getenv("SECRET_KEY", "unsafe-dev-key")
 
-DEBUG = os.getenv("DEBUG", "True") == "True"
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",") if not DEBUG else []
 
 
-# ===============================
+
 # APPLICATIONS
-# ===============================
 
 INSTALLED_APPS = [
     'daphne', 
@@ -29,7 +29,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'issues',
-
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -39,9 +38,7 @@ INSTALLED_APPS = [
 ]
 
 
-# ===============================
 # MIDDLEWARE
-# ===============================
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -76,21 +73,18 @@ TEMPLATES = [
 
 
 
-# ===============================
 # DATABASE
-# ===============================
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'),
-        conn_max_age=600
+        default=os.getenv('DATABASE_URL'),
+        conn_max_age=600,
+        conn_health_checks=True,
     )
 }
 
 
-# ===============================
 # PASSWORD VALIDATION
-# ===============================
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -100,19 +94,15 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# ===============================
 # INTERNATIONALIZATION
-# ===============================
 
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
 
 
-# ===============================
 # STATIC FILES
-# ===============================
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
@@ -122,16 +112,12 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 
-# ===============================
 # CORS
-# ===============================
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG
 
 
-# ===============================
 # REST FRAMEWORK
-# ===============================
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -152,9 +138,7 @@ REST_FRAMEWORK = {
 }
 
 
-# ===============================
 # JWT CONFIG
-# ===============================
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
@@ -163,9 +147,7 @@ SIMPLE_JWT = {
 }
 
 
-# ===============================
 # USER MODEL
-# ===============================
 
 AUTH_USER_MODEL = 'issues.User'
 
@@ -176,8 +158,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 ASGI_APPLICATION = "core.asgi.application"
 WSGI_APPLICATION = 'core.wsgi.application'
 
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels.layers.InMemoryChannelLayer",
     },
 }
+

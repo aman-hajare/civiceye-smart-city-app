@@ -33,6 +33,19 @@ const ProtectedRoute = ({ children, requiredRole = null, disallowedRoles = [] })
   return children;
 };
 
+const PublicRoute = ({ children }) => {
+  const token = getAccessToken();
+  if (token) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return children;
+};
+
+const FallbackRoute = () => {
+  const token = getAccessToken();
+  return <Navigate to={token ? '/dashboard' : '/'} replace />;
+};
+
 const DashboardLayout = ({ children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -50,13 +63,18 @@ const DashboardLayout = ({ children }) => {
 };
 
 function App() {
-  const isAuthenticated = Boolean(getAccessToken());
-
   return (
     <NotificationProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
+          <Route
+            path="/"
+            element={(
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            )}
+          />
 
           <Route
             path="/dashboard"
@@ -124,7 +142,7 @@ function App() {
             }
           />
 
-          <Route path="*" element={<Navigate to={isAuthenticated ? '/dashboard' : '/'} replace />} />
+          <Route path="*" element={<FallbackRoute />} />
         </Routes>
       </BrowserRouter>
     </NotificationProvider>

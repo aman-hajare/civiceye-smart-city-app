@@ -3,9 +3,7 @@ from django.contrib.auth.password_validation import validate_password
 from .models import User, Issue
 
 
-# ============================================
 # USER SERIALIZER
-# ============================================
 
 class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
@@ -83,9 +81,7 @@ class RegisterUserSerializer(serializers.ModelSerializer):
         return user
 
 
-# ============================================
 # ISSUE SERIALIZER
-# ============================================
 
 class IssueSerializer(serializers.ModelSerializer):
 
@@ -126,9 +122,7 @@ class IssueSerializer(serializers.ModelSerializer):
             'created_at'
         ]
 
-    # ============================================
     # IMAGE URL
-    # ============================================
 
     def get_image_url(self, obj):
         request = self.context.get('request')
@@ -136,9 +130,7 @@ class IssueSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(obj.image.url)
         return None
 
-    # ============================================
     # VALIDATIONS
-    # ============================================
 
     def validate_latitude(self, value):
         if value < -90 or value > 90:
@@ -150,9 +142,7 @@ class IssueSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Invalid longitude.")
         return value
 
-    # ============================================
     # ROLE-BASED UPDATE PROTECTION
-    # ============================================
 
     def update(self, instance, validated_data):
         user = self.context['request'].user
