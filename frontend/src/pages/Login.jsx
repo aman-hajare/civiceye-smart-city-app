@@ -137,25 +137,36 @@ const Login = () => {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4 bg-center bg-cover bg-no-repeat relative"
-      style={{ backgroundImage: "url('/black-white-smart-city-network-connections-black-white-smart-city-network-connections-communication-technology-102747131.webp')" }}
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-slate-950"
+      style={{
+        backgroundImage:
+          'radial-gradient(circle at top left, rgba(34, 211, 238, 0.18), transparent 28%), radial-gradient(circle at right center, rgba(148, 163, 184, 0.16), transparent 24%), linear-gradient(135deg, #020617 0%, #0f172a 48%, #111827 100%)',
+      }}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-black/58 via-black/42 to-slate-900/58" />
+      <div className="absolute -left-24 top-10 h-56 w-56 rounded-full bg-cyan-400/10 blur-3xl" />
+      <div className="absolute -right-24 bottom-10 h-64 w-64 rounded-full bg-slate-300/10 blur-3xl" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:32px_32px] opacity-40" />
       <div className="w-full max-w-md relative z-10">
-        <div className="bg-white/92 backdrop-blur-md border border-white/50 rounded-2xl shadow-2xl p-8">
+        <div className="bg-slate-900/88 backdrop-blur-xl border border-slate-700/70 rounded-3xl shadow-2xl shadow-black/35 p-8 sm:p-10">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-extrabold tracking-wide text-gray-900">CivicEye</h1>
-            <p className="text-gray-700 mt-2 font-medium">Smart City Management System</p>
+            <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-cyan-400 text-slate-950 font-bold text-lg shadow-lg shadow-cyan-400/20">
+              C
+            </div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-white mt-4">CivicEye</h1>
+            <p className="text-slate-300 mt-2 font-medium">Smart City Management System</p>
+            <p className="text-sm text-slate-400 mt-3 leading-6">
+              Manage complaints, monitor issues, and keep city operations moving from a single dashboard.
+            </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-1 mb-6 p-1 rounded-xl bg-slate-200/70">
+          <div className="grid grid-cols-2 gap-1 mb-6 p-1 rounded-2xl bg-slate-950/55 border border-slate-700/60">
             <button
               type="button"
               onClick={() => switchMode('login')}
               className={`py-2 rounded-lg font-semibold text-sm transition ${
                 mode === 'login'
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'text-slate-700 hover:bg-white/70'
+                  ? 'bg-cyan-400 text-slate-950 shadow-sm'
+                  : 'text-slate-300 hover:bg-slate-800'
               }`}
             >
               Login
@@ -165,8 +176,8 @@ const Login = () => {
               onClick={() => switchMode('signup')}
               className={`py-2 rounded-lg font-semibold text-sm transition ${
                 mode === 'signup'
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'text-slate-700 hover:bg-white/70'
+                  ? 'bg-cyan-400 text-slate-950 shadow-sm'
+                  : 'text-slate-300 hover:bg-slate-800'
               }`}
             >
               Create Account
@@ -181,7 +192,7 @@ const Login = () => {
                   type="text"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  className="login-input w-full px-4 py-2.5 border border-slate-300/70 rounded-xl bg-slate-100/55 text-gray-900 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition"
+                  className="login-input w-full px-4 py-2.5 border border-slate-700/80 rounded-xl bg-slate-950/35 text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition"
                   placeholder="Enter your username"
                   required
                   disabled={loading}
@@ -194,20 +205,20 @@ const Login = () => {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="login-input w-full px-4 py-2.5 border border-slate-300/70 rounded-xl bg-slate-100/55 text-gray-900 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition"
+                  className="login-input w-full px-4 py-2.5 border border-slate-700/80 rounded-xl bg-slate-950/35 text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition"
                   placeholder="Enter your password"
                   required
                   disabled={loading}
                 />
               </div>
 
-              {error && <div className="p-3 bg-red-100/90 border border-red-400 text-red-800 rounded-xl text-sm">{error}</div>}
-              {message && <div className="p-3 bg-emerald-100/90 border border-emerald-500 text-emerald-800 rounded-xl text-sm">{message}</div>}
+              {error && <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-200 rounded-xl text-sm">{error}</div>}
+              {message && <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 rounded-xl text-sm">{message}</div>}
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-slate-900 text-white font-semibold py-2.5 rounded-xl hover:bg-black transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-cyan-400 text-slate-950 font-semibold py-2.5 rounded-xl hover:bg-cyan-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Logging in...' : 'Login'}
               </button>
@@ -220,7 +231,7 @@ const Login = () => {
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="login-input w-full px-4 py-2.5 border border-slate-300/70 rounded-xl bg-slate-100/55 text-gray-900 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition"
+                  className="login-input w-full px-4 py-2.5 border border-slate-700/80 rounded-xl bg-slate-950/35 text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition"
                   placeholder="Enter your first name"
                   required
                   disabled={loading}
@@ -233,7 +244,7 @@ const Login = () => {
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="login-input w-full px-4 py-2.5 border border-slate-300/70 rounded-xl bg-slate-100/55 text-gray-900 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition"
+                  className="login-input w-full px-4 py-2.5 border border-slate-700/80 rounded-xl bg-slate-950/35 text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition"
                   placeholder="Enter your last name"
                   required
                   disabled={loading}
@@ -246,7 +257,7 @@ const Login = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="login-input w-full px-4 py-2.5 border border-slate-300/70 rounded-xl bg-slate-100/55 text-gray-900 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition"
+                  className="login-input w-full px-4 py-2.5 border border-slate-700/80 rounded-xl bg-slate-950/35 text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition"
                   placeholder="Enter your email"
                   required
                   disabled={loading}
@@ -259,29 +270,29 @@ const Login = () => {
                   type="password"
                   value={signupPassword}
                   onChange={(e) => setSignupPassword(e.target.value)}
-                  className="login-input w-full px-4 py-2.5 border border-slate-300/70 rounded-xl bg-slate-100/55 text-gray-900 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition"
+                  className="login-input w-full px-4 py-2.5 border border-slate-700/80 rounded-xl bg-slate-950/35 text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition"
                   placeholder="Create a password"
                   minLength={8}
                   required
                   disabled={loading}
                 />
-                <p className="text-xs text-slate-600 mt-1">Use at least 8 characters.</p>
+                <p className="text-xs text-slate-400 mt-1">Use at least 8 characters.</p>
               </div>
 
-              {error && <div className="p-3 bg-red-100/90 border border-red-400 text-red-800 rounded-xl text-sm">{error}</div>}
-              {message && <div className="p-3 bg-emerald-100/90 border border-emerald-500 text-emerald-800 rounded-xl text-sm">{message}</div>}
+              {error && <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-200 rounded-xl text-sm">{error}</div>}
+              {message && <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 rounded-xl text-sm">{message}</div>}
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-slate-900 text-white font-semibold py-2.5 rounded-xl hover:bg-black transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-cyan-400 text-slate-950 font-semibold py-2.5 rounded-xl hover:bg-cyan-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Creating account...' : 'Create Account'}
               </button>
             </form>
           )}
 
-          <div className="mt-5 text-center text-sm text-slate-700">
+          <div className="mt-5 text-center text-sm text-slate-400">
             {mode === 'login' ? (
               <>
                 New user?{' '}
@@ -310,11 +321,8 @@ const Login = () => {
           </div>
 
           {mode === 'login' && (
-            <div className="mt-6 pt-6 border-t border-gray-300/80 bg-white/45 rounded-xl px-4 py-3">
-              <p className="text-center text-sm font-bold text-gray-900">Demo Credentials</p>
-              <p className="text-center text-sm text-gray-800 mt-2">Admin: admin / password</p>
-              <p className="text-center text-sm text-gray-800">Worker: worker / password</p>
-              <p className="text-center text-sm text-gray-800">User: user / password</p>
+            <div className="mt-6 pt-5 border-t border-slate-700/60 rounded-2xl px-4 py-4 bg-slate-950/30">
+              <p className="text-center text-sm text-slate-200">Username / password</p>
             </div>
           )}
         </div>

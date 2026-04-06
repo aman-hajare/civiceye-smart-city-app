@@ -7,6 +7,7 @@ from django.db.models import Count
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from .websocket import send_realtime_notification
+from .utils.ai_validator import predict_issue_image, AIValidationError
 import math
 
 from .models import Issue, User, Notification
@@ -70,6 +71,15 @@ class IssueViewSet(viewsets.ModelViewSet):
     search_fields = ['title', 'description']
     ordering_fields = ['created_at', 'priority_score']
 
+    @staticmethod
+    def _normalize_category(value):
+        normalized = str(value).strip().lower().replace("_", "")
+        aliases = {
+            "streetlight": "streetlight",
+            "water": "other",
+        }
+        return aliases.get(normalized, normalized)
+
     def _notify_users(self, users, message):
         for target_user in users:
             notification = Notification.objects.create(
@@ -95,6 +105,30 @@ class IssueViewSet(viewsets.ModelViewSet):
         if self.request.user.role != "USER":
             raise PermissionDenied("Only users can report issues.")
 
+        image_file = serializer.validated_data.get("image")
+        selected_category = self._normalize_category(serializer.validated_data.get("category"))
+
+        ai_prediction = ""
+        ai_confidence = None
+
+        if not image_file:
+            raise serializers.ValidationError({"image": "Issue image is required."})
+
+        try:
+            ai_prediction, ai_confidence = predict_issue_image(image_file)
+        except AIValidationError as exc:
+            raise serializers.ValidationError({"image": str(exc)})
+
+        if ai_confidence < 0.6:
+            raise serializers.ValidationError(
+                {"image": "Low confidence image, please upload a clear image"}
+            )
+
+        if ai_prediction != selected_category:
+            raise serializers.ValidationError(
+                {"image": "Image does not match selected category"}
+            )
+
         priority = self.calculate_priority(
             category=serializer.validated_data.get("category"),
             status="PENDING"
@@ -102,7 +136,9 @@ class IssueViewSet(viewsets.ModelViewSet):
 
         issue = serializer.save(
             reported_by=self.request.user,
-            priority_score=priority
+            priority_score=priority,
+            ai_prediction=ai_prediction,
+            ai_confidence=ai_confidence,
         )
 
         # Notify all admins when a new issue is reported.

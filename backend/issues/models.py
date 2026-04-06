@@ -47,6 +47,8 @@ class Issue(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
     image = models.ImageField(upload_to='issues/', null=True, blank=True)
+    ai_prediction = models.CharField(max_length=20, blank=True, default='')
+    ai_confidence = models.FloatField(null=True, blank=True)
 
     category = models.CharField(
         max_length=20,

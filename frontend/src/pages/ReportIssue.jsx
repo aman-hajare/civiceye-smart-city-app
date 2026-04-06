@@ -22,17 +22,28 @@ const ReportIssue = () => {
   const getErrorMessage = (err) => {
     const data = err?.response?.data;
     if (!data) return err.message || 'Failed to submit issue. Please try again.';
-    if (typeof data === 'string') return data;
-    if (data.detail) return data.detail;
 
-    const firstFieldError = Object.values(data).find((value) => {
-      if (Array.isArray(value) && value.length > 0) return true;
-      return typeof value === 'string';
-    });
+    const extractMessage = (value) => {
+      if (!value) return null;
+      if (typeof value === 'string') return value;
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          const nested = extractMessage(item);
+          if (nested) return nested;
+        }
+        return null;
+      }
+      if (typeof value === 'object') {
+        if (typeof value.detail === 'string') return value.detail;
+        for (const nestedValue of Object.values(value)) {
+          const nested = extractMessage(nestedValue);
+          if (nested) return nested;
+        }
+      }
+      return null;
+    };
 
-    if (Array.isArray(firstFieldError)) return firstFieldError[0];
-    if (typeof firstFieldError === 'string') return firstFieldError;
-    return 'Failed to submit issue. Please check your inputs.';
+    return extractMessage(data) || 'Failed to submit issue. Please check your inputs.';
   };
 
   const handleChange = (e) => {
@@ -86,6 +97,11 @@ const ReportIssue = () => {
       return;
     }
 
+    if (!formData.image) {
+      setError('Issue image is required. Please upload an image.');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -96,9 +112,7 @@ const ReportIssue = () => {
       payload.append('category', formData.category);
       payload.append('latitude', String(Number(formData.latitude)));
       payload.append('longitude', String(Number(formData.longitude)));
-      if (formData.image) {
-        payload.append('image', formData.image);
-      }
+      payload.append('image', formData.image);
 
       const response = await api.post('/issues/', payload, {
         headers: {
@@ -124,7 +138,8 @@ const ReportIssue = () => {
         navigate('/issues');
       }, 2000);
     } catch (err) {
-      console.error('Error submitting issue:', err);
+      const rawError = err?.response?.data || err?.message || 'Unknown error';
+      console.error('Error submitting issue:', typeof rawError === 'string' ? rawError : JSON.stringify(rawError));
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);
@@ -207,12 +222,13 @@ const ReportIssue = () => {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Issue Image (Optional)
+              Issue Image <span className="text-red-500">*</span>
             </label>
             <input
               type="file"
               accept="image/*"
               onChange={handleImageChange}
+              required
               disabled={loading || success}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm file:mr-4 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
             />

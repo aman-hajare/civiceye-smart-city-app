@@ -105,6 +105,8 @@ class IssueSerializer(serializers.ModelSerializer):
             'description',
             'image',
             'image_url',
+            'ai_prediction',
+            'ai_confidence',
             'category',
             'status',
             'latitude',
@@ -117,6 +119,8 @@ class IssueSerializer(serializers.ModelSerializer):
         ]
 
         read_only_fields = [
+            'ai_prediction',
+            'ai_confidence',
             'priority_score',
             'reported_by',
             'created_at'
@@ -141,6 +145,12 @@ class IssueSerializer(serializers.ModelSerializer):
         if value < -180 or value > 180:
             raise serializers.ValidationError("Invalid longitude.")
         return value
+
+    def validate(self, attrs):
+        # Enforce image as mandatory only during issue creation.
+        if self.instance is None and not attrs.get("image"):
+            raise serializers.ValidationError({"image": "Issue image is required."})
+        return attrs
 
     # ROLE-BASED UPDATE PROTECTION
 
